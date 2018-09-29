@@ -1,0 +1,223 @@
+pipelines:
+  docker-dotnet-ide:
+    group: liget
+    label_template: "${git[:8]}"
+    materials:
+      git:
+        type: configrepo
+    stages:
+      - build:
+          clean_workspace: true
+          jobs:
+            stretch:
+              resources:
+                - docker_builder
+              artifacts:
+                - build:
+                    source: "image/imagerc*"
+                    destination:
+              tasks:
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks verify_version
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ops_docker_push=true ./tasks build_one stretch
+            bionic:
+              resources:
+                - docker_builder
+              artifacts:
+                - build:
+                    source: "image/imagerc*"
+                    destination:
+              tasks:
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks verify_version
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ops_docker_push=true ./tasks build_one bionic
+            full:
+              resources:
+                - docker_builder
+              artifacts:
+                - build:
+                    source: "image/imagerc*"
+                    destination:
+              tasks:
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks verify_version
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ops_docker_push=true ./tasks build_one full
+            alpine:
+              resources:
+                - docker_builder
+              artifacts:
+                - build:
+                    source: "image/imagerc*"
+                    destination:
+              tasks:
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks verify_version
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ops_docker_push=true ./tasks build_one alpine
+      - itest:
+          clean_workspace: true
+          jobs:
+            stretch:
+              resources:
+                - docker_builder
+              tasks:
+                - fetch:
+                    stage: build
+                    job: stretch
+                    is_file: yes
+                    source: imagerc-stretch
+                    destination: image/
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks itest_one stretch
+            bionic:
+              resources:
+                - docker_builder
+              tasks:
+                - fetch:
+                    stage: build
+                    job: bionic
+                    is_file: yes
+                    source: imagerc-bionic
+                    destination: image/
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks itest_one bionic
+            full:
+              resources:
+                - docker_builder
+              tasks:
+                - fetch:
+                    stage: build
+                    job: full
+                    is_file: yes
+                    source: imagerc-full
+                    destination: image/
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks itest_one full
+            alpine:
+              resources:
+                - docker_builder
+              tasks:
+                - fetch:
+                    stage: build
+                    job: alpine
+                    is_file: yes
+                    source: imagerc-alpine
+                    destination: image/
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks itest_one alpine
+      - release:
+          clean_workspace: true
+          jobs:
+            code:
+              # this could run on elastic go agent, but since all the jobs
+              # are run here on docker_builder, let's run this job there too
+              resources:
+                - docker_builder
+              tasks:
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks release
+      - publish:
+          clean_workspace: true
+          jobs:
+            stretch:
+              resources:
+                - docker_builder
+              tasks:
+                - fetch:
+                    stage: build
+                    job: stretch
+                    is_file: yes
+                    source: imagerc-stretch
+                    destination: image/
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks publish_one stretch
+            bionic:
+              resources:
+                - docker_builder
+              tasks:
+                - fetch:
+                    stage: build
+                    job: bionic
+                    is_file: yes
+                    source: imagerc-bionic
+                    destination: image/
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks publish_one bionic
+            full:
+              resources:
+                - docker_builder
+              tasks:
+                - fetch:
+                    stage: build
+                    job: full
+                    is_file: yes
+                    source: imagerc-full
+                    destination: image/
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks publish_one full
+            alpine:
+              resources:
+                - docker_builder
+              tasks:
+                - fetch:
+                    stage: build
+                    job: alpine
+                    is_file: yes
+                    source: imagerc-alpine
+                    destination: image/
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks publish_one alpine

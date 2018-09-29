@@ -1,0 +1,4 @@
+---
+backend: 'consul'
+project_name: 'docker-dotnet-ide'
+consul_url: 'http://consul.ai-traders.com:8500'

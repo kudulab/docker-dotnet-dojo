@@ -1,0 +1,60 @@
+FROM microsoft/dotnet:2.1.402-sdk-alpine3.7
+
+ENV NUGET_CLI_VERSION=v4.7.1 \
+  PAKET_VERSION=5.182.0-alpha001 \
+  FAKE_VERSION=5.7.2 \
+  MONO_VERSION=5.14.0.177 \
+  IDE_VERSION=0.10.3
+
+# Add community edge repository to install shadow package
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/community" >> /etc/apk/repositories
+RUN apk update && apk upgrade && \
+    apk add --no-cache bash git openssh wget curl sudo shadow nano
+################################################################################
+# For ide
+################################################################################
+RUN git clone --depth 1 -b ${IDE_VERSION} https://github.com/ai-traders/ide.git /tmp/ide_git && \
+  /tmp/ide_git/ide_image_scripts/src/install.sh && \
+  rm -r /tmp/ide_git && \
+  echo 'ide ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+
+################################################################################
+# Above ide
+################################################################################
+
+RUN su ide -c 'dotnet tool install fake-cli -g --version ${FAKE_VERSION}'
+RUN su ide -c 'dotnet tool install Paket -g --version ${PAKET_VERSION} --add-source https://api.nuget.org/v3/index.json'
+
+
+RUN mkdir -p /home/ide/.config/NuGet/ /home/ide/.nuget/NuGet
+COPY NuGet.Config /home/ide/.nuget/NuGet/NuGet.Config
+RUN ln -s /home/ide/.nuget/NuGet/NuGet.Config /home/ide/.config/NuGet/NuGet.Config &&\
+  chown ide:ide -R /home/ide/.nuget
+
+COPY core/* /usr/bin/
+
+# Install bats
+RUN git clone --depth 1 https://github.com/sstephenson/bats.git /opt/bats &&\
+   git clone --depth 1 https://github.com/ztombol/bats-support.git /opt/bats-support &&\
+   git clone --depth 1 https://github.com/ztombol/bats-assert.git /opt/bats-assert &&\
+ /opt/bats/install.sh /usr/local
+
+# Warm up image
+RUN su ide -c 'mkdir -p /tmp/warmup && cd /tmp/warmup && dotnet new classlib && dotnet restore && dotnet build && rm -rf /tmp/warmup' &&\
+ rm -rf /tmp/NuGetScratch
+# Disable microsoft spying
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+
+# For Bash
+COPY profile /home/ide/.profile
+COPY bashrc_default /home/ide/.bashrc
+RUN chown ide:ide -R /home/ide
+
+# Those are light to install and may change often, so they go at the bottom
+# of this Dockerfile.
+COPY etc_ide.d/scripts/* /etc/ide.d/scripts/
+
+ENTRYPOINT ["/usr/bin/entrypoint.sh"]
+CMD ["/bin/bash"]
+
+ENV this_image_tag=alpine-2.0.0 this_image_name=tomzo/dotnet-ide

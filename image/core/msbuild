@@ -1,0 +1,3 @@
+#!/bin/bash
+set -e
+exec dotnet /usr/share/dotnet/sdk/${DOTNET_SDK_VERSION}/MSBuild.dll "$@"

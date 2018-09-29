@@ -1,0 +1,114 @@
+#!/bin/bash
+
+set -e
+if [[ ! -f ./releaser ]];then
+  wget --quiet http://http.archive.ai-traders.com/releaser/1.0.3/releaser
+fi
+source ./releaser
+if [[ ! -f ./docker-ops ]];then
+  wget --quiet http://http.archive.ai-traders.com/docker-ops/0.2.3/docker-ops
+fi
+source ./docker-ops
+# This goes as last in order to let end user variables override default values
+releaser_init
+
+image_name_no_registry="dotnet-ide"
+image_name="tomzo/${image_name_no_registry}"
+image_dir="./image"
+
+function get_imagerc_filename {
+  name=$1
+  if [ -z "$name" ]; then
+    echo "Must specify variant of the mono-ide"
+    exit 3;
+  fi
+  echo "imagerc-${name}"
+}
+
+function get_tag_suffix {
+  name=$1
+  if [ -z "$name" ]; then
+    echo "Must specify variant of the mono-ide"
+    exit 3;
+  elif [ "$name" == "full" ]; then
+    echo ""
+  else
+    echo "$name-"
+  fi
+
+}
+
+command="$1"
+case "${command}" in
+  set_version)
+      if [[ -n "$2" ]]; then
+        next_version="$2"
+        set_version_in_changelog "${changelog_file}" "${next_version}"
+        set_next_oversion "${next_version}"
+      else
+        next_version=$(get_next_oversion)
+        set_version_in_changelog "${changelog_file}" "${next_version}"
+      fi
+      ./tasks dockerfiles
+      exit $?
+      ;;
+  verify_version)
+      verify_version_for_release
+      exit $?
+      ;;
+  dockerfiles)
+      production_image_version=$(get_last_version_from_changelog "${changelog_file}")
+      python3 dockerfiles.py --iversion $production_image_version
+      ;;
+  build_one)
+      ./tasks dockerfiles
+      imagerc_filename=$(get_imagerc_filename $2)
+      production_image_version=$(get_last_version_from_changelog "${changelog_file}")
+      production_image_suffix=$(get_tag_suffix $2)
+      production_image_tag="${production_image_suffix}${production_image_version}"
+      docker_build_options="--build-arg this_image_name_arg=${image_name_no_registry} --build-arg this_image_tag_arg=${production_image_tag} -f Dockerfile.$2"
+      if [[ -z "${GO_PIPELINE_LABEL}" ]];then
+        # set to the latest git commit hash
+        ci_version=$(git rev-parse HEAD)
+      else
+        ci_version="${GO_PIPELINE_LABEL}"
+      fi
+      docker_build "${image_dir}" "${imagerc_filename}" "${image_name}" "${production_image_suffix}${ci_version}"
+      ;;
+  itest_one)
+      imagerc_filename=$(get_imagerc_filename $2)
+      source_imagerc "${image_dir}"  "${imagerc_filename}"
+      echo "Testing image: ${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}"
+      echo "IDE_DOCKER_IMAGE=\"${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}\"" > Idefile.to_be_tested
+      echo "IDE_WORK=$(pwd)/test/integration/test_ide_work" >> Idefile.to_be_tested
+      if [ "$2" == "full" ]; then
+        time bats "$(pwd)/test/integration/end_user/bats_mono"
+      else
+        time bats "$(pwd)/test/integration/end_user/bats_core"
+      fi
+      exit $?
+      ;;
+  release)
+      verify_version_for_release
+      git_tag_from_oversion
+      old_version=$(get_next_oversion)
+      next_version=$(bump_patch_version "${old_version}")
+      set_next_oversion "${next_version}"
+      exit $?
+      ;;
+  publish_one)
+      imagerc_filename=$(get_imagerc_filename $2)
+      production_image_version=$(get_last_version_from_changelog "${changelog_file}")
+      production_image_suffix=$(get_tag_suffix $2)
+      production_image_tag="${production_image_suffix}${production_image_version}"
+      validate_version_is_semver "${production_image_version}"
+      source_imagerc "${image_dir}" "${imagerc_filename}"
+      docker_push "${AIT_DOCKER_IMAGE_NAME}" "${AIT_DOCKER_IMAGE_TAG}" "${production_image_tag}"
+      exit $?
+      ;;
+  *)
+      echo "Invalid command: '${command}'"
+      exit 1
+      ;;
+esac
+set +e

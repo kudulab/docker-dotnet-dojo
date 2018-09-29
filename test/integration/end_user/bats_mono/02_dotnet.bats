@@ -1,0 +1,1 @@
+../bats_core/02_dotnet.bats
