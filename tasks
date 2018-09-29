@@ -52,9 +52,19 @@ case "${command}" in
       ./tasks dockerfiles
       exit $?
       ;;
-  verify_version)
+  verify)
       verify_version_for_release
-      exit $?
+      ./tasks dockerfiles
+      modified_files=$(git status --porcelain | awk '{print $2}' | wc -l)
+      if [ $modified_files != "0" ]; then
+        echo "There are modified files in the working directory, you might have forgotten to commit re-generated Dockerfiles. Please run './tasks set_version' and commit"
+        exit 5
+      fi
+      ;;
+  git_tag)
+      production_image_version=$(get_last_version_from_changelog "${changelog_file}")
+      git tag -f "${production_image_version}"
+      git push -f origin "${production_image_version}"
       ;;
   dockerfiles)
       production_image_version=$(get_last_version_from_changelog "${changelog_file}")
@@ -75,6 +85,48 @@ case "${command}" in
       fi
       docker_build "${image_dir}" "${imagerc_filename}" "${image_name}" "${production_image_suffix}${ci_version}"
       ;;
+  trigger_dockerhub)
+      if [ -z "${DOCKERHUB_TOKEN}" ]; then
+        echo "${DOCKERHUB_TOKEN} must be set"
+        exit 5
+      fi
+      production_image_version=$(get_last_version_from_changelog "${changelog_file}")
+      curl -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"${production_image_version}\"}" -X POST https://registry.hub.docker.com/u/tomzo/dotnet-ide/trigger/${DOCKERHUB_TOKEN}/
+      ;;
+  wait_one)
+      imagerc_filename=$(get_imagerc_filename $2)
+      production_image_version=$(get_last_version_from_changelog "${changelog_file}")
+      production_image_suffix=$(get_tag_suffix $2)
+      production_image_tag="${production_image_suffix}${production_image_version}"
+      full_name="${image_name}:${production_image_tag}"
+      echo "Trying to pull $full_name"
+      docker pull $full_name
+      echo "export AIT_DOCKER_IMAGE_NAME=\"${image_name}\"" > "${imagerc_filename}"
+      echo "export AIT_DOCKER_IMAGE_TAG=\"${image_tag}\"" >> "${imagerc_filename}"
+      ;;
+  wait_all)
+      set +e
+      # Start trying and retrying
+      ((count = 500))
+      while [[ $count -ne 0 ]] ; do
+        sleep 6
+        ./tasks wait_one full &&\
+        ./tasks wait_one stretch &&\
+        ./tasks wait_one bionic &&\
+        ./tasks wait_one alpine
+        rc=$?
+        if [[ $rc -eq 0 ]] ; then
+            ((count = 1))
+        fi
+        ((count = count - 1))
+      done
+      # Print a message if we failed
+      if [[ $rc -ne 0 ]] ; then
+        echo "Could pull images after 50 minutes - stopping."
+        exit 1
+      fi
+      set -e
+      ;;
   itest_one)
       imagerc_filename=$(get_imagerc_filename $2)
       source_imagerc "${image_dir}"  "${imagerc_filename}"
@@ -86,24 +138,6 @@ case "${command}" in
       else
         time bats "$(pwd)/test/integration/end_user/bats_core"
       fi
-      exit $?
-      ;;
-  release)
-      verify_version_for_release
-      git_tag_from_oversion
-      old_version=$(get_next_oversion)
-      next_version=$(bump_patch_version "${old_version}")
-      set_next_oversion "${next_version}"
-      exit $?
-      ;;
-  publish_one)
-      imagerc_filename=$(get_imagerc_filename $2)
-      production_image_version=$(get_last_version_from_changelog "${changelog_file}")
-      production_image_suffix=$(get_tag_suffix $2)
-      production_image_tag="${production_image_suffix}${production_image_version}"
-      validate_version_is_semver "${production_image_version}"
-      source_imagerc "${image_dir}" "${imagerc_filename}"
-      docker_push "${AIT_DOCKER_IMAGE_NAME}" "${AIT_DOCKER_IMAGE_TAG}" "${production_image_tag}"
       exit $?
       ;;
   *)

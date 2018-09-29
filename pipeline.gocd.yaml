@@ -6,91 +6,49 @@ pipelines:
       git:
         type: configrepo
     stages:
-      - build:
+      - verify:
+          elastic_profile_id: w.c2.m2048.e20
           clean_workspace: true
-          jobs:
-            stretch:
-              resources:
-                - docker_builder
-              artifacts:
-                - build:
-                    source: "image/imagerc*"
-                    destination:
-              tasks:
-                - exec:
-                    command: /bin/bash
-                    arguments:
-                      - -c
-                      - ./tasks verify_version
-                - exec:
-                    command: /bin/bash
-                    arguments:
-                      - -c
-                      - ops_docker_push=true ./tasks build_one stretch
-            bionic:
-              resources:
-                - docker_builder
-              artifacts:
-                - build:
-                    source: "image/imagerc*"
-                    destination:
-              tasks:
-                - exec:
-                    command: /bin/bash
-                    arguments:
-                      - -c
-                      - ./tasks verify_version
-                - exec:
-                    command: /bin/bash
-                    arguments:
-                      - -c
-                      - ops_docker_push=true ./tasks build_one bionic
-            full:
-              resources:
-                - docker_builder
-              artifacts:
-                - build:
-                    source: "image/imagerc*"
-                    destination:
-              tasks:
-                - exec:
-                    command: /bin/bash
-                    arguments:
-                      - -c
-                      - ./tasks verify_version
-                - exec:
-                    command: /bin/bash
-                    arguments:
-                      - -c
-                      - ops_docker_push=true ./tasks build_one full
-            alpine:
-              resources:
-                - docker_builder
-              artifacts:
-                - build:
-                    source: "image/imagerc*"
-                    destination:
-              tasks:
-                - exec:
-                    command: /bin/bash
-                    arguments:
-                      - -c
-                      - ./tasks verify_version
-                - exec:
-                    command: /bin/bash
-                    arguments:
-                      - -c
-                      - ops_docker_push=true ./tasks build_one alpine
+          tasks:
+            - exec:
+                command: /bin/bash
+                arguments:
+                  - -c
+                  - ./tasks verify
+      - build:
+          secure_variables:
+            DOCKERHUB_TOKEN: "oLAYP6lDeBjTGDZSMqJhJuiMf1tlxyhDcTtuhtCAl959cAQDLIN76g=="
+          clean_workspace: true
+          elastic_profile_id: w.c2.m2048.e20
+          artifacts:
+            - build:
+                source: "image/imagerc*"
+                destination:
+          tasks:
+            - exec:
+                command: /bin/bash
+                arguments:
+                  - -c
+                  - ./tasks git_tag
+            - exec:
+                command: /bin/bash
+                arguments:
+                  - -c
+                  - ./tasks trigger_dockerhub
+            - exec:
+                command: /bin/bash
+                arguments:
+                  - -c
+                  - ./tasks wait_all
       - itest:
           clean_workspace: true
           jobs:
             stretch:
-              resources:
-                - docker_builder
+              elastic_profile_id: w.c2.m2048.e20
               tasks:
                 - fetch:
                     stage: build
-                    job: stretch
+                    job: build
                     is_file: yes
                     source: imagerc-stretch
                     destination: image/
@@ -100,12 +58,11 @@ pipelines:
                       - -c
                       - ./tasks itest_one stretch
             bionic:
-              resources:
-                - docker_builder
+              elastic_profile_id: w.c2.m2048.e20
               tasks:
                 - fetch:
                     stage: build
-                    job: bionic
+                    job: build
                     is_file: yes
                     source: imagerc-bionic
                     destination: image/
@@ -115,12 +72,11 @@ pipelines:
                       - -c
                       - ./tasks itest_one bionic
             full:
-              resources:
-                - docker_builder
+              elastic_profile_id: w.c2.m2048.e20
               tasks:
                 - fetch:
                     stage: build
-                    job: full
+                    job: build
                     is_file: yes
                     source: imagerc-full
                     destination: image/
@@ -130,12 +86,11 @@ pipelines:
                       - -c
                       - ./tasks itest_one full
             alpine:
-              resources:
-                - docker_builder
+              elastic_profile_id: w.c2.m2048.e20
               tasks:
                 - fetch:
                     stage: build
-                    job: alpine
+                    job: build
                     is_file: yes
                     source: imagerc-alpine
                     destination: image/
@@ -144,80 +99,3 @@ pipelines:
                     arguments:
                       - -c
                       - ./tasks itest_one alpine
-      - release:
-          clean_workspace: true
-          jobs:
-            code:
-              # this could run on elastic go agent, but since all the jobs
-              # are run here on docker_builder, let's run this job there too
-              resources:
-                - docker_builder
-              tasks:
-                - exec:
-                    command: /bin/bash
-                    arguments:
-                      - -c
-                      - ./tasks release
-      - publish:
-          clean_workspace: true
-          jobs:
-            stretch:
-              resources:
-                - docker_builder
-              tasks:
-                - fetch:
-                    stage: build
-                    job: stretch
-                    is_file: yes
-                    source: imagerc-stretch
-                    destination: image/
-                - exec:
-                    command: /bin/bash
-                    arguments:
-                      - -c
-                      - ./tasks publish_one stretch
-            bionic:
-              resources:
-                - docker_builder
-              tasks:
-                - fetch:
-                    stage: build
-                    job: bionic
-                    is_file: yes
-                    source: imagerc-bionic
-                    destination: image/
-                - exec:
-                    command: /bin/bash
-                    arguments:
-                      - -c
-                      - ./tasks publish_one bionic
-            full:
-              resources:
-                - docker_builder
-              tasks:
-                - fetch:
-                    stage: build
-                    job: full
-                    is_file: yes
-                    source: imagerc-full
-                    destination: image/
-                - exec:
-                    command: /bin/bash
-                    arguments:
-                      - -c
-                      - ./tasks publish_one full
-            alpine:
-              resources:
-                - docker_builder
-              tasks:
-                - fetch:
-                    stage: build
-                    job: alpine
-                    is_file: yes
-                    source: imagerc-alpine
-                    destination: image/
-                - exec:
-                    command: /bin/bash
-                    arguments:
-                      - -c
-                      - ./tasks publish_one alpine
