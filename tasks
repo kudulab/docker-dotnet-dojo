@@ -101,8 +101,8 @@ case "${command}" in
       full_name="${image_name}:${production_image_tag}"
       echo "Trying to pull $full_name"
       docker pull $full_name
-      echo "export AIT_DOCKER_IMAGE_NAME=\"${image_name}\"" > "${imagerc_filename}"
-      echo "export AIT_DOCKER_IMAGE_TAG=\"${image_tag}\"" >> "${imagerc_filename}"
+      echo "export AIT_DOCKER_IMAGE_NAME=\"${image_name}\"" > "${image_dir}/${imagerc_filename}"
+      echo "export AIT_DOCKER_IMAGE_TAG=\"${image_tag}\"" >> "${image_dir}/${imagerc_filename}"
       ;;
   wait_all)
       set +e

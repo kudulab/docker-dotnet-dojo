@@ -6,9 +6,25 @@ ENV NUGET_CLI_VERSION=v4.7.1 \
   MONO_VERSION=5.14.0.177 \
   IDE_VERSION=0.10.3
 
+ENV NODE_VERSION=v8.12.0 NPM_VERSION=6 YARN_VERSION=latest
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-  sudo git ca-certificates wget apt-utils locales git unzip nano ssh-client
+  sudo git ca-certificates wget apt-utils locales git unzip nano ssh-client xz-utils
+RUN ARCH= && dpkgArch="$(dpkg --print-architecture)" \
+  && case "${dpkgArch##*-}" in \
+    amd64) ARCH='x64';; \
+    ppc64el) ARCH='ppc64le';; \
+    s390x) ARCH='s390x';; \
+    arm64) ARCH='arm64';; \
+    armhf) ARCH='armv7l';; \
+    i386) ARCH='x86';; \
+    *) echo "unsupported architecture"; exit 1 ;; \
+  esac \
+  && curl -SLO "https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-linux-$ARCH.tar.xz" \
+  && tar -xJf "node-${NODE_VERSION}-linux-$ARCH.tar.xz" -C /usr/local --strip-components=1 --no-same-owner \
+  && rm "node-${NODE_VERSION}-linux-$ARCH.tar.xz" \
+  && ln -s /usr/local/bin/node /usr/local/bin/nodejs
+RUN npm -g install yarn
 ################################################################################
 # For ide
 ################################################################################
@@ -61,4 +77,4 @@ COPY etc_ide.d/scripts/* /etc/ide.d/scripts/
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
 CMD ["/bin/bash"]
 
-ENV this_image_tag=stretch-2.0.0 this_image_name=tomzo/dotnet-ide
+ENV this_image_tag=stretch-2.1.0 this_image_name=tomzo/dotnet-ide

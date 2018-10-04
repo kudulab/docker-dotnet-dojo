@@ -1,3 +1,9 @@
+### 2.1.0 (2018-Oct-04)
+
+ * added node.js and yarn for typescript support
+ * fixed imagerc publish dir
+ * fix ssh setup, keys are not required
+
 ### 2.0.0 (2018-Sep-29)
 
 First open source release based on `mono-ide:2.0.1`.
