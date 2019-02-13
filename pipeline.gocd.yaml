@@ -16,8 +16,6 @@ pipelines:
                   - -c
                   - ./tasks verify
       - build:
-          secure_variables:
-            DOCKERHUB_TOKEN: "oLAYP6lDeBjTGDZSMqJhJuiMf1tlxyhDcTtuhtCAl959cAQDLIN76g=="
           clean_workspace: true
           elastic_profile_id: w.c2.m2048.e20
           artifacts:
