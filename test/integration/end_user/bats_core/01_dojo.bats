@@ -19,9 +19,12 @@ load '/opt/bats-assert/load.bash'
   assert_equal "$status" 0
 }
 
+# checkout such git ref of dotnet/dotnet-docker that does not use .NET core 2.2
 @test "can git clone using https from github" {
   run /bin/bash -c "dojo -c Dojofile.to_be_tested \"rm -rf dotnet-docker-samples &&\
-    git clone https://github.com/dotnet/dotnet-docker/ dotnet-docker-samples\""
+    git clone https://github.com/dotnet/dotnet-docker/ dotnet-docker-samples &&\
+    cd dotnet-docker-samples &&\
+    git checkout 08ba4044b109ac06134a8a1232605add8aa41d71\""
   assert_output --partial "Cloning into 'dotnet-docker-samples'..."
   assert_equal "$status" 0
 }
