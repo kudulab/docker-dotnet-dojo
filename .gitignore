@@ -1,6 +1,6 @@
-/Idefile.to_be_tested
+/Dojofile.to_be_tested
 /docker-ops
 /image/imagerc*
 /releaser
-/test/integration/test_ide_work/
+/test/integration/test_dojo_work/
 /secret-ops

@@ -1,3 +1,6 @@
+* port from an Ide docker image: https://github.com/ai-traders/docker-dotnet-ide
+ to Dojo docker image
+
 ### 2.1.0 (2018-Oct-04)
 
  * added node.js and yarn for typescript support

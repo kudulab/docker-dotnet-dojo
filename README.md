@@ -1,7 +1,7 @@
-# docker-dotnet-ide
+# docker-dotnet-dojo
 
-An [IDE](https://github.com/ai-traders/ide) docker image with tools for dotnet development.
-Based on `microsoft/dotnet` image. Implements a few conventions from IDE project,
+A [Dojo](https://github.com/ai-traders/dojo) docker image with tools for dotnet development.
+Based on `microsoft/dotnet` image. Implements a few conventions from Dojo project,
 which provides a quick and repeatable method for building your projects (in docker) without installing anything.
 
 ## Specification
@@ -20,22 +20,22 @@ This image has installed:
  * (only in mono-variant) Mono `5.14.0.177`
 
 ## Usage
-1. Install [IDE](https://github.com/ai-traders/ide). (It's just a script on $PATH)
-2. In your project you should have an `Idefile`
+1. Install [Dojo](https://github.com/ai-traders/dojo). (It's just a script on $PATH)
+2. In your project you should have an `Dojofile`
 ```
-IDE_DRIVER=docker
-IDE_DOCKER_IMAGE="tomzo/dotnet-ide:2.0.0"
+DOJO_DRIVER=docker
+DOJO_DOCKER_IMAGE="ai-traders/dotnet-dojo:2.0.0"
 ```
 3. Run some build commands:
 ```bash
-ide paket install
-ide msbuild /t:Publish
+dojo paket install
+dojo msbuild /t:Publish
 ```
 
-By default, current directory in docker container is `/ide/work`,
+By default, current directory in docker container is `/dojo/work`,
 which is a mount from your current docker host.
 
-You can also enter interactive mode by just running `ide` in the root of your project.
+You can also enter interactive mode by just running `dojo` in the root of your project.
 
 ## Example projects
 

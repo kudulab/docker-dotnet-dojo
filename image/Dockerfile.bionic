@@ -4,7 +4,7 @@ ENV NUGET_CLI_VERSION=v4.7.1 \
   PAKET_VERSION=5.182.0-alpha001 \
   FAKE_VERSION=5.7.2 \
   MONO_VERSION=5.14.0.177 \
-  IDE_VERSION=0.10.3
+  DOJO_VERSION=0.3.1
 
 ENV NODE_VERSION=v8.12.0 NPM_VERSION=6 YARN_VERSION=latest
 RUN apt-get update && \
@@ -26,19 +26,19 @@ RUN ARCH= && dpkgArch="$(dpkg --print-architecture)" \
   && ln -s /usr/local/bin/node /usr/local/bin/nodejs
 RUN npm -g install yarn
 ################################################################################
-# For ide
+# For Dojo
 ################################################################################
-RUN git clone --depth 1 -b ${IDE_VERSION} https://github.com/ai-traders/ide.git /tmp/ide_git && \
-  /tmp/ide_git/ide_image_scripts/src/install.sh && \
-  rm -r /tmp/ide_git && \
-  echo 'ide ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
+RUN git clone --depth 1 -b ${DOJO_VERSION} https://github.com/ai-traders/dojo.git /tmp/dojo_git &&\
+  /tmp/dojo_git/image_scripts/src/install.sh && \
+  rm -r /tmp/dojo_git && \
+  echo 'dojo ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
 
 ################################################################################
-# Above ide
+# Above Dojo
 ################################################################################
 
-RUN su ide -c 'dotnet tool install fake-cli -g --version ${FAKE_VERSION}'
-RUN su ide -c 'dotnet tool install Paket -g --version ${PAKET_VERSION} --add-source https://api.nuget.org/v3/index.json'
+RUN su dojo -c 'dotnet tool install fake-cli -g --version ${FAKE_VERSION}'
+RUN su dojo -c 'dotnet tool install Paket -g --version ${PAKET_VERSION} --add-source https://api.nuget.org/v3/index.json'
 
 # Install common usage apt packages.
 # * ssh-client - to run git clone over ssh
@@ -46,10 +46,10 @@ RUN su ide -c 'dotnet tool install Paket -g --version ${PAKET_VERSION} --add-sou
 RUN apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF &&\
   locale-gen en_US.UTF-8 && localedef -i en_US -f UTF-8 en_US.UTF-8 && update-locale
 
-RUN mkdir -p /home/ide/.config/NuGet/ /home/ide/.nuget/NuGet
-COPY NuGet.Config /home/ide/.nuget/NuGet/NuGet.Config
-RUN ln -s /home/ide/.nuget/NuGet/NuGet.Config /home/ide/.config/NuGet/NuGet.Config &&\
-  chown ide:ide -R /home/ide/.nuget
+RUN mkdir -p /home/dojo/.config/NuGet/ /home/dojo/.nuget/NuGet
+COPY NuGet.Config /home/dojo/.nuget/NuGet/NuGet.Config
+RUN ln -s /home/dojo/.nuget/NuGet/NuGet.Config /home/dojo/.config/NuGet/NuGet.Config &&\
+  chown dojo:dojo -R /home/dojo/.nuget
 
 COPY core/* /usr/bin/
 
@@ -60,21 +60,21 @@ RUN git clone --depth 1 https://github.com/sstephenson/bats.git /opt/bats &&\
  /opt/bats/install.sh /usr/local
 
 # Warm up image
-RUN su ide -c 'mkdir -p /tmp/warmup && cd /tmp/warmup && dotnet new classlib && dotnet restore && dotnet build && rm -rf /tmp/warmup' &&\
+RUN su dojo -c 'mkdir -p /tmp/warmup && cd /tmp/warmup && dotnet new classlib && dotnet restore && dotnet build && rm -rf /tmp/warmup' &&\
  rm -rf /tmp/NuGetScratch
 # Disable microsoft spying
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
 
 # For Bash
-COPY profile /home/ide/.profile
-COPY bashrc_default /home/ide/.bashrc
-RUN chown ide:ide -R /home/ide
+COPY profile /home/dojo/.profile
+COPY bashrc_default /home/dojo/.bashrc
+RUN chown dojo:dojo -R /home/dojo
 
 # Those are light to install and may change often, so they go at the bottom
 # of this Dockerfile.
-COPY etc_ide.d/scripts/* /etc/ide.d/scripts/
+COPY etc_dojo.d/scripts/* /etc/dojo.d/scripts/
 
 ENTRYPOINT ["/usr/bin/entrypoint.sh"]
 CMD ["/bin/bash"]
 
-ENV this_image_tag=bionic-2.1.0 this_image_name=tomzo/dotnet-ide
+ENV this_image_tag=bionic-2.1.0 this_image_name=ai-traders/dotnet-dojo

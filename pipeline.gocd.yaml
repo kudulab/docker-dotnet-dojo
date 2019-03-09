@@ -1,5 +1,5 @@
 pipelines:
-  docker-dotnet-ide:
+  docker-dotnet-dojo:
     group: liget
     label_template: "${git[:8]}"
     materials:

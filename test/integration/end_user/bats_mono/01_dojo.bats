@@ -1,0 +1,1 @@
+../bats_core/01_dojo.bats

@@ -12,14 +12,14 @@ source ./docker-ops
 # This goes as last in order to let end user variables override default values
 releaser_init
 
-image_name_no_registry="dotnet-ide"
-image_name="tomzo/${image_name_no_registry}"
+image_name_no_registry="dotnet-dojo"
+image_name="ai-traders/${image_name_no_registry}"
 image_dir="./image"
 
 function get_imagerc_filename {
   name=$1
   if [ -z "$name" ]; then
-    echo "Must specify variant of the mono-ide"
+    echo "Must specify variant of the dotnet-dojo"
     exit 3;
   fi
   echo "imagerc-${name}"
@@ -28,7 +28,7 @@ function get_imagerc_filename {
 function get_tag_suffix {
   name=$1
   if [ -z "$name" ]; then
-    echo "Must specify variant of the mono-ide"
+    echo "Must specify variant of the dotnet-dojo"
     exit 3;
   elif [ "$name" == "full" ]; then
     echo ""
@@ -91,7 +91,7 @@ case "${command}" in
         exit 5
       fi
       production_image_version=$(get_last_version_from_changelog "${changelog_file}")
-      curl -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"${production_image_version}\"}" -X POST https://registry.hub.docker.com/u/tomzo/dotnet-ide/trigger/${DOCKERHUB_TOKEN}/
+      curl -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"${production_image_version}\"}" -X POST https://registry.hub.docker.com/u/${image_name}/trigger/${DOCKERHUB_TOKEN}/
       ;;
   wait_one)
       imagerc_filename=$(get_imagerc_filename $2)
@@ -131,8 +131,8 @@ case "${command}" in
       imagerc_filename=$(get_imagerc_filename $2)
       source_imagerc "${image_dir}"  "${imagerc_filename}"
       echo "Testing image: ${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}"
-      echo "IDE_DOCKER_IMAGE=\"${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}\"" > Idefile.to_be_tested
-      echo "IDE_WORK=$(pwd)/test/integration/test_ide_work" >> Idefile.to_be_tested
+      echo "DOJO_DOCKER_IMAGE=\"${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}\"" > Dojofile.to_be_tested
+      echo "DOJO_WORK_OUTER=$(pwd)/test/integration/test_dojo_work" >> Dojofile.to_be_tested
       if [ "$2" == "full" ]; then
         time bats "$(pwd)/test/integration/end_user/bats_mono"
       else

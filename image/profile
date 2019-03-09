@@ -1,7 +1,7 @@
 # Ensure that after shell login:
 # * some env variables are (un)set
 # * if bash shell is run, source bashrc file (used for interactive shell)
-# * ide user is in "${ide_work}"
+# * dojo user is in "${dojo_work}"
 
 # Disable microsoft spying
 export DOTNET_CLI_TELEMETRY_OPTOUT=1
@@ -18,7 +18,7 @@ if [ -n "$BASH_VERSION" ]; then
     fi
 fi
 
-export PATH="$PATH:/home/ide/.dotnet/tools"
+export PATH="$PATH:/home/dojo/.dotnet/tools"
 
-# this variable is set by default IDE image scripts
-cd "${ide_work}"
+# this variable is set by default Dojo image scripts
+cd "${dojo_work}"
