@@ -28,7 +28,6 @@ def main(argv):
    with open("image/Dockerfile.full", "w") as text_file:
        text_file.write(j2_env.get_template(template_file).render(
            base_tag=sdk_version + '-sdk-stretch',
-           this_image_tag_arg=image_version,
            enable_mono=True,
            os_family='debian',
            os_dist='stretch'))
@@ -36,7 +35,6 @@ def main(argv):
    with open("image/Dockerfile.stretch", "w") as text_file:
        text_file.write(j2_env.get_template(template_file).render(
            base_tag=sdk_version + '-sdk-stretch',
-           this_image_tag_arg='stretch-' + image_version,
            enable_mono=False,
            os_family='debian',
            os_dist='stretch'))
@@ -44,7 +42,6 @@ def main(argv):
    with open("image/Dockerfile.bionic", "w") as text_file:
        text_file.write(j2_env.get_template(template_file).render(
            base_tag=sdk_version + '-sdk-bionic',
-           this_image_tag_arg='bionic-' + image_version,
            enable_mono=False,
            os_family='debian',
            os_dist='bionic'))
@@ -52,7 +49,6 @@ def main(argv):
    with open("image/Dockerfile.alpine", "w") as text_file:
        text_file.write(j2_env.get_template(template_file).render(
            base_tag=sdk_version + '-sdk-alpine3.7',
-           this_image_tag_arg='alpine-' + image_version,
            enable_mono=False,
            os_family='alpine',
            os_dist='alpine3.7'))

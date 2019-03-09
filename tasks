@@ -73,10 +73,8 @@ case "${command}" in
   build_one)
       ./tasks dockerfiles
       imagerc_filename=$(get_imagerc_filename $2)
-      production_image_version=$(get_last_version_from_changelog "${changelog_file}")
       production_image_suffix=$(get_tag_suffix $2)
-      production_image_tag="${production_image_suffix}${production_image_version}"
-      docker_build_options="--build-arg this_image_name_arg=${image_name_no_registry} --build-arg this_image_tag_arg=${production_image_tag} -f Dockerfile.$2"
+      docker_build_options="-f Dockerfile.$2"
       if [[ -z "${GO_PIPELINE_LABEL}" ]];then
         # set to the latest git commit hash
         ci_version=$(git rev-parse HEAD)
