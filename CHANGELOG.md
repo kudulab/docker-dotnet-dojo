@@ -3,6 +3,7 @@
 * port from an Ide docker image: https://github.com/ai-traders/docker-dotnet-ide
  to Dojo docker image
 * do not set docker build args: this_image_tag_arg and this_image_name_arg
+* bump paket to 5.198.0
 
 ### 2.1.0 (2018-Oct-04)
 

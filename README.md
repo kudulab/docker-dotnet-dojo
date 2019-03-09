@@ -15,7 +15,7 @@ There 4 variants of this image. Because mono is still needed in some projects.
 This image has installed:
  * dotnet SDK 2.1
  * NuGet CLI
- * Paket installed globally. `5.182.0-alpha001`
+ * Paket installed globally. `5.198.0`
  * Fake installed globally.
  * (only in mono-variant) Mono `5.14.0.177`
 
