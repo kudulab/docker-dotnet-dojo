@@ -18,26 +18,51 @@ pipelines:
       - build:
           clean_workspace: true
           elastic_profile_id: w.c2.m2048.e20
-          artifacts:
-            - build:
-                source: "image/imagerc*"
-                destination:
-          tasks:
-            - exec:
-                command: /bin/bash
-                arguments:
-                  - -c
-                  - ./tasks git_tag
-            - exec:
-                command: /bin/bash
-                arguments:
-                  - -c
-                  - ./tasks trigger_dockerhub
-            - exec:
-                command: /bin/bash
-                arguments:
-                  - -c
-                  - ./tasks wait_all
+          jobs:
+            stretch:
+              artifacts:
+                - build:
+                    source: "image/imagerc-stretch"
+                    destination:
+              tasks:
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ops_docker_push=true ./tasks build_one stretch
+            bionic:
+              artifacts:
+                - build:
+                    source: "image/imagerc-bionic"
+                    destination:
+              tasks:
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ops_docker_push=true ./tasks build_one bionic
+            full:
+              artifacts:
+                - build:
+                    source: "image/imagerc-full"
+                    destination:
+              tasks:
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ops_docker_push=true ./tasks build_one full
+            alpine:
+              artifacts:
+                - build:
+                    source: "image/imagerc-alpine"
+                    destination:
+              tasks:
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ops_docker_push=true ./tasks build_one alpine
       - itest:
           clean_workspace: true
           jobs:
@@ -46,7 +71,7 @@ pipelines:
               tasks:
                 - fetch:
                     stage: build
-                    job: build
+                    job: stretch
                     is_file: yes
                     source: imagerc-stretch
                     destination: image/
@@ -60,7 +85,7 @@ pipelines:
               tasks:
                 - fetch:
                     stage: build
-                    job: build
+                    job: bionic
                     is_file: yes
                     source: imagerc-bionic
                     destination: image/
@@ -74,7 +99,7 @@ pipelines:
               tasks:
                 - fetch:
                     stage: build
-                    job: build
+                    job: full
                     is_file: yes
                     source: imagerc-full
                     destination: image/
@@ -88,7 +113,7 @@ pipelines:
               tasks:
                 - fetch:
                     stage: build
-                    job: build
+                    job: alpine
                     is_file: yes
                     source: imagerc-alpine
                     destination: image/
@@ -97,3 +122,14 @@ pipelines:
                     arguments:
                       - -c
                       - ./tasks itest_one alpine
+      - release:
+          clean_workspace: true
+          jobs:
+            code:
+              elastic_profile_id: w.c2.m2048.e20
+              tasks:
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks git_tag

@@ -6,15 +6,15 @@ if [[ ! -f ./releaser ]];then
 fi
 source ./releaser
 if [[ ! -f ./docker-ops ]];then
-  wget --quiet http://http.archive.ai-traders.com/docker-ops/0.2.3/docker-ops
+  wget --quiet http://http.archive.ai-traders.com/docker-ops/0.3.3/docker-ops
 fi
 source ./docker-ops
 # This goes as last in order to let end user variables override default values
 releaser_init
 
-image_name_no_registry="dotnet-dojo"
-image_name="ai-traders/${image_name_no_registry}"
+image_name="dotnet-dojo"
 image_dir="./image"
+image_registry="docker-registry.ai-traders.com"
 
 function get_imagerc_filename {
   name=$1
@@ -38,6 +38,7 @@ function get_tag_suffix {
 
 }
 
+set +u
 command="$1"
 case "${command}" in
   set_version)
@@ -74,62 +75,22 @@ case "${command}" in
       ./tasks dockerfiles
       imagerc_filename=$(get_imagerc_filename $2)
       production_image_suffix=$(get_tag_suffix $2)
-      docker_build_options="-f Dockerfile.$2"
       if [[ -z "${GO_PIPELINE_LABEL}" ]];then
         # set to the latest git commit hash
         ci_version=$(git rev-parse HEAD)
       else
         ci_version="${GO_PIPELINE_LABEL}"
       fi
-      docker_build "${image_dir}" "${imagerc_filename}" "${image_name}" "${production_image_suffix}${ci_version}"
-      ;;
-  trigger_dockerhub)
-      if [ -z "${DOCKERHUB_TOKEN}" ]; then
-        echo "${DOCKERHUB_TOKEN} must be set"
-        exit 5
-      fi
-      production_image_version=$(get_last_version_from_changelog "${changelog_file}")
-      curl -H "Content-Type: application/json" --data "{\"source_type\": \"Tag\", \"source_name\": \"${production_image_version}\"}" -X POST https://registry.hub.docker.com/u/${image_name}/trigger/${DOCKERHUB_TOKEN}/
-      ;;
-  wait_one)
-      imagerc_filename=$(get_imagerc_filename $2)
-      production_image_version=$(get_last_version_from_changelog "${changelog_file}")
-      production_image_suffix=$(get_tag_suffix $2)
-      production_image_tag="${production_image_suffix}${production_image_version}"
-      full_name="${image_name}:${production_image_tag}"
-      echo "Trying to pull $full_name"
-      docker pull $full_name
-      echo "export AIT_DOCKER_IMAGE_NAME=\"${image_name}\"" > "${image_dir}/${imagerc_filename}"
-      echo "export AIT_DOCKER_IMAGE_TAG=\"${image_tag}\"" >> "${image_dir}/${imagerc_filename}"
-      ;;
-  wait_all)
-      set +e
-      # Start trying and retrying
-      ((count = 500))
-      while [[ $count -ne 0 ]] ; do
-        sleep 6
-        ./tasks wait_one full &&\
-        ./tasks wait_one stretch &&\
-        ./tasks wait_one bionic &&\
-        ./tasks wait_one alpine
-        rc=$?
-        if [[ $rc -eq 0 ]] ; then
-            ((count = 1))
-        fi
-        ((count = count - 1))
-      done
-      # Print a message if we failed
-      if [[ $rc -ne 0 ]] ; then
-        echo "Could pull images after 50 minutes - stopping."
-        exit 1
-      fi
-      set -e
+      image_tag="${production_image_suffix}${ci_version}"
+      ( set -x; cd "${image_dir}"; docker build -f Dockerfile.$2 -t "${image_name}:${image_tag}" .; )
+      docker_ops::create_imagerc "${image_dir}" "${imagerc_filename}" "${image_name}" "${image_tag}" "${image_registry}"
+      docker_ops::push_tmp "${image_name}" "${image_tag}" "${image_registry}"
       ;;
   itest_one)
       imagerc_filename=$(get_imagerc_filename $2)
-      source_imagerc "${image_dir}"  "${imagerc_filename}"
-      echo "Testing image: ${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}"
-      echo "DOJO_DOCKER_IMAGE=\"${AIT_DOCKER_IMAGE_NAME}:${AIT_DOCKER_IMAGE_TAG}\"" > Dojofile.to_be_tested
+      docker_ops::ensure_temp_image "${image_dir}" "${imagerc_filename}"
+      echo "Testing image: ${AIT_DOCKER_IMAGE_URL}"
+      echo "DOJO_DOCKER_IMAGE=\"${AIT_DOCKER_IMAGE_URL}\"" > Dojofile.to_be_tested
       echo "DOJO_WORK_OUTER=$(pwd)/test/integration/test_dojo_work" >> Dojofile.to_be_tested
       if [ "$2" == "full" ]; then
         time bats "$(pwd)/test/integration/end_user/bats_mono"
