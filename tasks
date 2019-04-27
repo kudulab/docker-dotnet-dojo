@@ -100,8 +100,8 @@ case "${command}" in
   itest_one)
       imagerc_filename=$(get_imagerc_filename $2)
       docker_ops::ensure_pulled_image "${image_dir}" "${imagerc_filename}"
-      echo "Testing image: ${AIT_DOCKER_IMAGE_URL}"
-      echo "DOJO_DOCKER_IMAGE=\"${AIT_DOCKER_IMAGE_URL}\"" > Dojofile.to_be_tested
+      echo "Testing image: ${KUDU_DOCKER_IMAGE_URL}"
+      echo "DOJO_DOCKER_IMAGE=\"${KUDU_DOCKER_IMAGE_URL}\"" > Dojofile.to_be_tested
       echo "DOJO_WORK_OUTER=$(pwd)/test/integration/test_dojo_work" >> Dojofile.to_be_tested
       if [ "$2" == "full" ]; then
         time bats "$(pwd)/test/integration/end_user/bats_mono"
