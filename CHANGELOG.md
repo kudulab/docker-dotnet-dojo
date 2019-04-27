@@ -1,3 +1,10 @@
+### 3.1.0 (2019-Apr-27)
+
+ * use dockerhub to as temporary and final registry
+ * use new operations scripts from kudulab
+ * drop oversion
+ * change license to Apache
+
 ### 3.0.0 (2019-Mar-09)
 
 * port from an Ide docker image: https://github.com/ai-traders/docker-dotnet-ide

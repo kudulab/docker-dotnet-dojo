@@ -1,20 +1,34 @@
 #!/bin/bash
 
 set -e
-if [[ ! -f ./releaser ]];then
-  wget --quiet http://http.archive.ai-traders.com/releaser/1.0.3/releaser
-fi
-source ./releaser
-if [[ ! -f ./docker-ops ]];then
-  wget --quiet http://http.archive.ai-traders.com/docker-ops/0.3.3/docker-ops
-fi
-source ./docker-ops
-# This goes as last in order to let end user variables override default values
-releaser_init
 
-image_name="dotnet-dojo"
+RELEASER_VERSION="2.1.0"
+DOCKER_OPS_VERSION="2.0.0"
+SECRET_OPS_VERSION="0.6.1"
+
+SECRET_OPS_FILE="ops/secret-ops"
+SECRET_OPS_TAR_FILE="ops/secret-ops-${SECRET_OPS_VERSION}.tar.gz"
+RELEASER_FILE="ops/releaser-${RELEASER_VERSION}"
+DOCKER_OPS_FILE="ops/docker-ops-${DOCKER_OPS_VERSION}"
+
+mkdir -p ops
+if [[ ! -f $RELEASER_FILE ]];then
+  wget --quiet -O $RELEASER_FILE https://github.com/kudulab/releaser/releases/download/${RELEASER_VERSION}/releaser
+fi
+source $RELEASER_FILE
+if [[ ! -f $DOCKER_OPS_FILE ]];then
+  wget --quiet -O $DOCKER_OPS_FILE https://github.com/kudulab/docker-ops/releases/download/${DOCKER_OPS_VERSION}/docker-ops
+fi
+source $DOCKER_OPS_FILE
+if [[ ! -f $SECRET_OPS_TAR_FILE ]];then
+  wget --quiet -O $SECRET_OPS_TAR_FILE https://github.com/kudulab/secret-ops/releases/download/${SECRET_OPS_VERSION}/secret-ops.tar.gz
+  tar -xf $SECRET_OPS_TAR_FILE -C ops
+fi
+source $SECRET_OPS_FILE
+
+image_name="kudulab/dotnet-dojo"
 image_dir="./image"
-image_registry="docker-registry.ai-traders.com"
+image_registry="dockerhub"
 
 function get_imagerc_filename {
   name=$1
@@ -35,26 +49,27 @@ function get_tag_suffix {
   else
     echo "$name-"
   fi
+}
 
+function docker_login {
+  vault_user_path=$USER
+  if [ $vault_user_path == "go" ]; then
+    vault_user_path="gocd"
+  fi
+  dockerhub_user=$(vault read -field=user secret/$vault_user_path/dockerhub)
+  vault read -field=password secret/$vault_user_path/dockerhub | docker login --username $dockerhub_user --password-stdin
 }
 
 set +u
 command="$1"
 case "${command}" in
   set_version)
-      if [[ -n "$2" ]]; then
-        next_version="$2"
-        set_version_in_changelog "${changelog_file}" "${next_version}"
-        set_next_oversion "${next_version}"
-      else
-        next_version=$(get_next_oversion)
-        set_version_in_changelog "${changelog_file}" "${next_version}"
-      fi
+      set +u
+      releaser::bump_changelog_version "$2" "$3"
       ./tasks dockerfiles
-      exit $?
       ;;
   verify)
-      verify_version_for_release
+      releaser::verify_release_ready
       ./tasks dockerfiles
       modified_files=$(git status --porcelain | awk '{print $2}' | wc -l)
       if [ $modified_files != "0" ]; then
@@ -62,16 +77,12 @@ case "${command}" in
         exit 5
       fi
       ;;
-  git_tag)
-      production_image_version=$(get_last_version_from_changelog "${changelog_file}")
-      git tag -f "${production_image_version}"
-      git push -f origin "${production_image_version}"
-      ;;
   dockerfiles)
-      production_image_version=$(get_last_version_from_changelog "${changelog_file}")
+      production_image_version=$(releaser::get_last_version_from_changelog "${changelog_file}")
       python3 dockerfiles.py --iversion $production_image_version
       ;;
   build_one)
+      docker_login
       ./tasks dockerfiles
       imagerc_filename=$(get_imagerc_filename $2)
       production_image_suffix=$(get_tag_suffix $2)
@@ -82,13 +93,13 @@ case "${command}" in
         ci_version="${GO_PIPELINE_LABEL}"
       fi
       image_tag="${production_image_suffix}${ci_version}"
-      ( set -x; cd "${image_dir}"; docker build -f Dockerfile.$2 -t "${image_name}:${image_tag}" .; )
-      docker_ops::create_imagerc "${image_dir}" "${imagerc_filename}" "${image_name}" "${image_tag}" "${image_registry}"
-      docker_ops::push_tmp "${image_name}" "${image_tag}" "${image_registry}"
+      docker_build_options="-f Dockerfile.$2"
+      docker_ops::docker_build "${image_dir}" "${imagerc_filename}" "${image_name}" "${image_tag}" "${image_registry}"
+      docker_ops::push "${image_dir}" "${imagerc_filename}"
       ;;
   itest_one)
       imagerc_filename=$(get_imagerc_filename $2)
-      docker_ops::ensure_temp_image "${image_dir}" "${imagerc_filename}"
+      docker_ops::ensure_pulled_image "${image_dir}" "${imagerc_filename}"
       echo "Testing image: ${AIT_DOCKER_IMAGE_URL}"
       echo "DOJO_DOCKER_IMAGE=\"${AIT_DOCKER_IMAGE_URL}\"" > Dojofile.to_be_tested
       echo "DOJO_WORK_OUTER=$(pwd)/test/integration/test_dojo_work" >> Dojofile.to_be_tested
@@ -97,7 +108,25 @@ case "${command}" in
       else
         time bats "$(pwd)/test/integration/end_user/bats_core"
       fi
-      exit $?
+      ;;
+  release)
+      ./tasks verify
+      releaser::git_tag_from_changelog
+      ;;
+  publish_one)
+      imagerc_filename=$(get_imagerc_filename $2)
+      production_image_suffix=$(get_tag_suffix $2)
+      docker_login
+      version=$(releaser::get_last_version_from_whole_changelog "${changelog_file}")
+      image_tag="${production_image_suffix}${version}"
+      docker_ops::ensure_pulled_image "${image_dir}" "${imagerc_filename}"
+      docker_ops::retag_push "${image_dir}"  "${imagerc_filename}" "${image_name}" "${image_tag}" "${image_registry}"
+      ;;
+  generate_vault_token)
+      vault_token=$(vault token create -ttl=48h -policy=gocd -field token -metadata gocd_renew=true)
+      secured_token_gocd=$(secret_ops::encrypt_with_gocd_top "${vault_token}")
+      echo "Generated token: ${vault_token} and encrypted by GoCD server"
+      secret_ops::insert_vault_token_gocd_yaml "${secured_token_gocd}"
       ;;
   *)
       echo "Invalid command: '${command}'"

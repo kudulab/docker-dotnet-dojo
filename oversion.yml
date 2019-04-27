@@ -1,4 +1,0 @@
----
-backend: 'consul'
-project_name: 'docker-dotnet-dojo'
-consul_url: 'http://consul.ai-traders.com:8500'

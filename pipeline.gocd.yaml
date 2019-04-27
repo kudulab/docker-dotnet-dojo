@@ -1,3 +1,4 @@
+format_version: 3
 pipelines:
   docker-dotnet-dojo:
     group: liget
@@ -5,6 +6,8 @@ pipelines:
     materials:
       git:
         type: configrepo
+    secure_variables:
+      VAULT_TOKEN: "AES:KOIR+h5GSy/9N9ibBRFt7g==:wCLidBu4lvKkHPyLi+0912y1xnhfE3fTCWWWTNW+rFgep7ZpETYpchOxWuQ+d0Yf"
     stages:
       - verify:
           elastic_profile_id: w.c2.m2048.e20
@@ -29,7 +32,7 @@ pipelines:
                     command: /bin/bash
                     arguments:
                       - -c
-                      - ops_docker_push=true ./tasks build_one stretch
+                      - ./tasks build_one stretch
             bionic:
               artifacts:
                 - build:
@@ -40,7 +43,7 @@ pipelines:
                     command: /bin/bash
                     arguments:
                       - -c
-                      - ops_docker_push=true ./tasks build_one bionic
+                      - ./tasks build_one bionic
             full:
               artifacts:
                 - build:
@@ -51,7 +54,7 @@ pipelines:
                     command: /bin/bash
                     arguments:
                       - -c
-                      - ops_docker_push=true ./tasks build_one full
+                      - ./tasks build_one full
             alpine:
               artifacts:
                 - build:
@@ -62,7 +65,7 @@ pipelines:
                     command: /bin/bash
                     arguments:
                       - -c
-                      - ops_docker_push=true ./tasks build_one alpine
+                      - ./tasks build_one alpine
       - itest:
           clean_workspace: true
           jobs:
@@ -132,4 +135,63 @@ pipelines:
                     command: /bin/bash
                     arguments:
                       - -c
-                      - ./tasks git_tag
+                      - ./tasks release
+      - publish:
+          clean_workspace: true
+          jobs:
+            stretch:
+              elastic_profile_id: w.c2.m2048.e20
+              tasks:
+                - fetch:
+                    stage: build
+                    job: stretch
+                    is_file: yes
+                    source: imagerc-stretch
+                    destination: image/
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks publish_one stretch
+            bionic:
+              elastic_profile_id: w.c2.m2048.e20
+              tasks:
+                - fetch:
+                    stage: build
+                    job: bionic
+                    is_file: yes
+                    source: imagerc-bionic
+                    destination: image/
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks publish_one bionic
+            full:
+              elastic_profile_id: w.c2.m2048.e20
+              tasks:
+                - fetch:
+                    stage: build
+                    job: full
+                    is_file: yes
+                    source: imagerc-full
+                    destination: image/
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks publish_one full
+            alpine:
+              elastic_profile_id: w.c2.m2048.e20
+              tasks:
+                - fetch:
+                    stage: build
+                    job: alpine
+                    is_file: yes
+                    source: imagerc-alpine
+                    destination: image/
+                - exec:
+                    command: /bin/bash
+                    arguments:
+                      - -c
+                      - ./tasks publish_one alpine
