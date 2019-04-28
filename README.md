@@ -6,11 +6,11 @@ which provides a quick and repeatable method for building your projects (in dock
 
 ## Specification
 
-There 4 variants of this image. Because mono is still needed in some projects.
+There are 4 variants of this image. Because mono is still needed in some projects.
 * basic (everything) mono and dotnet core. tag: `<version>`
 * core only (debian stretch). tag `stretch-<version>`
 * core only (ubuntu bionic). tag `bionic-<version>`
-* core only (alpine 3.7). tag `alpine3.7-<version>`
+* core only (alpine 3.7). tag `alpine-<version>`
 
 This image has installed:
  * dotnet SDK 2.1
@@ -20,12 +20,14 @@ This image has installed:
  * (only in mono-variant) Mono `5.14.0.177`
  * Node.js, npm, yarn for typescript support and building web UIs
 
+The image is published on [Docker Hub](https://hub.docker.com/r/kudulab/dotnet-dojo).
+
 ## Usage
 1. Install [Dojo](https://github.com/ai-traders/dojo). (It's just a script on $PATH)
 2. In your project you should have an `Dojofile`
 ```
 DOJO_DRIVER=docker
-DOJO_DOCKER_IMAGE="kudulab/dotnet-dojo:3.0.1"
+DOJO_DOCKER_IMAGE="kudulab/dotnet-dojo:3.1.0"
 ```
 3. Run some build commands:
 ```bash
