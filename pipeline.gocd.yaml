@@ -6,6 +6,8 @@ pipelines:
     materials:
       git:
         type: configrepo
+        blacklist:
+          - "**/*.md"
     secure_variables:
       VAULT_TOKEN: "AES:KOIR+h5GSy/9N9ibBRFt7g==:wCLidBu4lvKkHPyLi+0912y1xnhfE3fTCWWWTNW+rFgep7ZpETYpchOxWuQ+d0Yf"
     stages:
