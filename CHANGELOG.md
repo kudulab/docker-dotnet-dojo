@@ -1,3 +1,7 @@
+### 3.1.1 (2019-Apr-29)
+
+* use Dojo scripts from Dojo 0.4.1 so that this directory is set up: `/run/user/<ID>`
+
 ### 3.1.0 (2019-Apr-27)
 
  * use dockerhub to as temporary and final registry
