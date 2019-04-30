@@ -9,7 +9,7 @@ pipelines:
         blacklist:
           - "**/*.md"
     secure_variables:
-      VAULT_TOKEN: "AES:KOIR+h5GSy/9N9ibBRFt7g==:wCLidBu4lvKkHPyLi+0912y1xnhfE3fTCWWWTNW+rFgep7ZpETYpchOxWuQ+d0Yf"
+      VAULT_TOKEN: "AES:qkqQdbTSfqdAmLg2w/5KhA==:xPF1CUSqP/b6qIe6VW+4TUU2YGmQBwBLcsl5O6t3XjReXpbOoCr5dsSwu0xkgE+L"
     stages:
       - verify:
           elastic_profile_id: w.c2.m2048.e20
