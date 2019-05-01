@@ -19,3 +19,5 @@ cp -r "${dojo_identity}/.ssh" "${dojo_home}"
 echo "StrictHostKeyChecking no
 UserKnownHostsFile /dev/null
 " > "${dojo_home}/.ssh/config"
+
+chown -R dojo:dojo "${dojo_home}/.ssh"
