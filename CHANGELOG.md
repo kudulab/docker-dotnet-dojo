@@ -1,3 +1,8 @@
+### 3.1.2 (2019-May-01)
+
+* use Dojo scripts from Dojo 0.4.3 so that this directory is set up: `/run/user/<ID>`;
+ add test
+
 ### 3.1.1 (2019-Apr-29)
 
 * use Dojo scripts from Dojo 0.4.1 so that this directory is set up: `/run/user/<ID>`

@@ -3,8 +3,7 @@ FROM microsoft/dotnet:2.1.402-sdk-alpine3.7
 ENV NUGET_CLI_VERSION=v4.7.1 \
   PAKET_VERSION=5.198.0 \
   FAKE_VERSION=5.7.2 \
-  MONO_VERSION=5.14.0.177 \
-  DOJO_VERSION=0.4.1
+  MONO_VERSION=5.14.0.177
 
 ENV NODE_VERSION=v8.12.0 NPM_VERSION=6 YARN_VERSION=latest
 # Add community edge repository to install shadow package
@@ -61,6 +60,7 @@ RUN apk update && apk upgrade && \
 ################################################################################
 # For Dojo
 ################################################################################
+ENV DOJO_VERSION=0.4.3
 RUN git clone --depth 1 -b ${DOJO_VERSION} https://github.com/ai-traders/dojo.git /tmp/dojo_git &&\
   /tmp/dojo_git/image_scripts/src/install.sh && \
   rm -r /tmp/dojo_git && \
