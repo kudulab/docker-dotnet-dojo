@@ -1,7 +1,7 @@
 format_version: 3
 pipelines:
   docker-dotnet-dojo:
-    group: liget
+    group: dotnet
     label_template: "${git[:8]}"
     materials:
       git:
@@ -11,18 +11,10 @@ pipelines:
     secure_variables:
       VAULT_TOKEN: "AES:qkqQdbTSfqdAmLg2w/5KhA==:xPF1CUSqP/b6qIe6VW+4TUU2YGmQBwBLcsl5O6t3XjReXpbOoCr5dsSwu0xkgE+L"
     stages:
-      - verify:
-          elastic_profile_id: w.c2.m2048.e20
-          clean_workspace: true
-          tasks:
-            - exec:
-                command: /bin/bash
-                arguments:
-                  - -c
-                  - ./tasks verify
       - build:
           clean_workspace: true
-          elastic_profile_id: w.c2.m2048.e20
+          resources:
+            - docker_builder
           jobs:
             stretch:
               resources:
@@ -80,7 +72,8 @@ pipelines:
           clean_workspace: true
           jobs:
             stretch:
-              elastic_profile_id: w.c2.m2048.e20
+              resources:
+                - docker_builder
               tasks:
                 - fetch:
                     stage: build
@@ -94,7 +87,8 @@ pipelines:
                       - -c
                       - ./tasks itest_one stretch
             bionic:
-              elastic_profile_id: w.c2.m2048.e20
+              resources:
+                - docker_builder
               tasks:
                 - fetch:
                     stage: build
@@ -108,7 +102,8 @@ pipelines:
                       - -c
                       - ./tasks itest_one bionic
             full:
-              elastic_profile_id: w.c2.m2048.e20
+              resources:
+                - docker_builder
               tasks:
                 - fetch:
                     stage: build
@@ -122,7 +117,8 @@ pipelines:
                       - -c
                       - ./tasks itest_one full
             alpine:
-              elastic_profile_id: w.c2.m2048.e20
+              resources:
+                - docker_builder
               tasks:
                 - fetch:
                     stage: build
@@ -139,7 +135,8 @@ pipelines:
           clean_workspace: true
           jobs:
             code:
-              elastic_profile_id: w.c2.m2048.e20
+              resources:
+                - docker_builder
               tasks:
                 - exec:
                     command: /bin/bash
@@ -150,7 +147,8 @@ pipelines:
           clean_workspace: true
           jobs:
             stretch:
-              elastic_profile_id: w.c2.m2048.e20
+              resources:
+                - docker_builder
               tasks:
                 - fetch:
                     stage: build
@@ -164,7 +162,8 @@ pipelines:
                       - -c
                       - ./tasks publish_one stretch
             bionic:
-              elastic_profile_id: w.c2.m2048.e20
+              resources:
+                - docker_builder
               tasks:
                 - fetch:
                     stage: build
@@ -178,7 +177,8 @@ pipelines:
                       - -c
                       - ./tasks publish_one bionic
             full:
-              elastic_profile_id: w.c2.m2048.e20
+              resources:
+                - docker_builder
               tasks:
                 - fetch:
                     stage: build
@@ -192,7 +192,8 @@ pipelines:
                       - -c
                       - ./tasks publish_one full
             alpine:
-              elastic_profile_id: w.c2.m2048.e20
+              resources:
+                - docker_builder
               tasks:
                 - fetch:
                     stage: build

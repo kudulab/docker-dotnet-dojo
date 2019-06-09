@@ -1,3 +1,6 @@
+### 3.1.3 (2019-Jun-09)
+Update pipeline, vault setup
+
 ### 3.1.2 (2019-May-01)
 
 * use Dojo scripts from Dojo 0.4.3 so that this directory is set up: `/run/user/<ID>`;
