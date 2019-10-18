@@ -83,8 +83,10 @@ case "${command}" in
       ;;
   build_one_local)
       ./tasks dockerfiles
-      imagerc_filename=$(get_imagerc_filename $2)
-      production_image_suffix=$(get_tag_suffix $2)
+      image_flavor="$2"
+      echo "Building image: ${image_flavor}"
+      imagerc_filename=$(get_imagerc_filename ${image_flavor})
+      production_image_suffix=$(get_tag_suffix ${image_flavor})
       if [[ -z "${GO_PIPELINE_LABEL}" ]];then
         # set to the latest git commit hash
         ci_version=$(git rev-parse HEAD)
@@ -92,14 +94,13 @@ case "${command}" in
         ci_version="${GO_PIPELINE_LABEL}"
       fi
       image_tag="${production_image_suffix}${ci_version}"
-      dockerfile="Dockerfile.$2"
-      docker_build_options="-f ${dockerfile}"
-      echo "Using Dockerfile: ${dockerfile}"
+      docker_build_options="-f Dockerfile.${image_flavor}"
       docker_ops::docker_build "${image_dir}" "${imagerc_filename}" "${image_name}" "${image_tag}" "${image_registry}"
       ;;
   build_one)
       docker_login
-      ./tasks build_one_local
+      ./tasks build_one_local $2
+      imagerc_filename=$(get_imagerc_filename $2)
       docker_ops::push "${image_dir}" "${imagerc_filename}"
       ;;
   itest_one)
