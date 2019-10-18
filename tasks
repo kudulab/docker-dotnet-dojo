@@ -81,8 +81,7 @@ case "${command}" in
       production_image_version=$(releaser::get_last_version_from_changelog "${changelog_file}")
       python3 dockerfiles.py --iversion $production_image_version
       ;;
-  build_one)
-      docker_login
+  build_one_local)
       ./tasks dockerfiles
       imagerc_filename=$(get_imagerc_filename $2)
       production_image_suffix=$(get_tag_suffix $2)
@@ -93,14 +92,20 @@ case "${command}" in
         ci_version="${GO_PIPELINE_LABEL}"
       fi
       image_tag="${production_image_suffix}${ci_version}"
-      docker_build_options="-f Dockerfile.$2"
+      dockerfile="Dockerfile.$2"
+      docker_build_options="-f ${dockerfile}"
+      echo "Using Dockerfile: ${dockerfile}"
       docker_ops::docker_build "${image_dir}" "${imagerc_filename}" "${image_name}" "${image_tag}" "${image_registry}"
+      ;;
+  build_one)
+      docker_login
+      ./tasks build_one_local
       docker_ops::push "${image_dir}" "${imagerc_filename}"
       ;;
   itest_one)
       imagerc_filename=$(get_imagerc_filename $2)
       docker_ops::ensure_pulled_image "${image_dir}" "${imagerc_filename}"
-      echo "Testing image: ${KUDU_DOCKER_IMAGE_URL}"
+      echo "Testing image: ${KUDU_DOCKER_IMAGE_URL} using ${imagerc_filename}"
       echo "DOJO_DOCKER_IMAGE=\"${KUDU_DOCKER_IMAGE_URL}\"" > Dojofile.to_be_tested
       echo "DOJO_WORK_OUTER=$(pwd)/test/integration/test_dojo_work" >> Dojofile.to_be_tested
       if [ "$2" == "full" ]; then
