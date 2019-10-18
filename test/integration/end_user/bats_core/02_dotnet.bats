@@ -25,7 +25,7 @@ load '/opt/bats-assert/load.bash'
 }
 @test "paket is invocable" {
   run /bin/bash -c "dojo -c Dojofile.to_be_tested \"paket --version\""
-  assert_output --partial "Paket version 5.198.0"
+  assert_output --partial "Paket version 5.226.0"
   assert_equal "$status" 0
 }
 @test "fake is invocable" {

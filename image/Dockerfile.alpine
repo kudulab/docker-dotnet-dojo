@@ -1,7 +1,7 @@
 FROM microsoft/dotnet:2.1.402-sdk-alpine3.7
 
 ENV NUGET_CLI_VERSION=v4.7.1 \
-  PAKET_VERSION=5.198.0 \
+  PAKET_VERSION=5.226.0 \
   FAKE_VERSION=5.7.2 \
   MONO_VERSION=5.14.0.177
 
@@ -60,7 +60,7 @@ RUN apk update && apk upgrade && \
 ################################################################################
 # For Dojo
 ################################################################################
-ENV DOJO_VERSION=0.4.3
+ENV DOJO_VERSION=0.6.3
 RUN git clone --depth 1 -b ${DOJO_VERSION} https://github.com/ai-traders/dojo.git /tmp/dojo_git &&\
   /tmp/dojo_git/image_scripts/src/install.sh && \
   rm -r /tmp/dojo_git && \
