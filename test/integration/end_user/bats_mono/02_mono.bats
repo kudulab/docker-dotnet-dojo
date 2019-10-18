@@ -34,3 +34,10 @@ load '/opt/bats-assert/load.bash'
   assert_output --partial "Build succeeded."
   assert_equal "$status" 0
 }
+
+# this needs mono
+@test "dotnet-example project with FAKE and paket is runnable" {
+  run /bin/bash -c "dojo -c Dojofile.to_be_tested \"cd dotnet-example && ./build.sh\""
+  assert_output --partial "Hello World!"
+  assert_equal "$status" 0
+}
