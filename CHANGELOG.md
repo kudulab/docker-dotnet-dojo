@@ -1,6 +1,9 @@
+### 3.1.4 (2019-Oct-18)
+
 * Paket 5.226.0
 * use Dojo scripts from Dojo 0.6.3
 * add task build_one_local, which can be invoked locally
+
 ### 3.1.3 (2019-Jun-09)
 Update pipeline, vault setup
 
