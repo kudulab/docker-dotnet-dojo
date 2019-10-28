@@ -1,4 +1,4 @@
-FROM microsoft/dotnet:2.1.402-sdk-bionic
+FROM mcr.microsoft.com/dotnet/core/sdk:2.2.402-bionic
 
 ENV NUGET_CLI_VERSION=v4.7.1 \
   PAKET_VERSION=5.226.0 \

@@ -8,7 +8,7 @@ load '/opt/bats-assert/load.bash'
 }
 @test "dotnet is invocable" {
   run /bin/bash -c "dojo -c Dojofile.to_be_tested \"dotnet --info\""
-  assert_output --partial "Microsoft.NETCore.App 2.1.4"
+  assert_output --partial "Microsoft.NETCore.App 2.2.7"
   assert_equal "$status" 0
 }
 @test "dotnet core projects can be built" {
