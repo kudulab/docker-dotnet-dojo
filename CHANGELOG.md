@@ -4,6 +4,7 @@
 * use Dojo scripts from Dojo 0.6.3
 * add task build_one_local, which can be invoked locally
 * newer base image sdk 2.2.402
+* Fake 5.18.2
 
 ### 3.1.3 (2019-Jun-09)
 Update pipeline, vault setup

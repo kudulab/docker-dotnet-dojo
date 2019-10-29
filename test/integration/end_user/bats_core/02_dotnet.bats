@@ -30,6 +30,6 @@ load '/opt/bats-assert/load.bash'
 }
 @test "fake is invocable" {
   run /bin/bash -c "dojo -c Dojofile.to_be_tested \"fake --version\""
-  assert_output --partial "FAKE 5 - F# Make (5.7.2)"
+  assert_output --partial "FAKE 5 - F# Make (5.18.2)"
   assert_equal "$status" 0
 }
