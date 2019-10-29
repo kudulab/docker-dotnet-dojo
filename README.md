@@ -1,6 +1,6 @@
 # docker-dotnet-dojo
 
-A [Dojo](https://github.com/ai-traders/dojo) docker image with tools for dotnet development.
+A [Dojo](https://github.com/kudulab/dojo) docker image with tools for dotnet development.
 Based on `microsoft/dotnet` image. Implements a few conventions from Dojo project,
 which provides a quick and repeatable method for building your projects (in docker) without installing anything.
 
@@ -10,12 +10,12 @@ There are 4 variants of this image. Because mono is still needed in some project
 * basic (everything) mono and dotnet core. tag: `<version>`
 * core only (debian stretch). tag `stretch-<version>`
 * core only (ubuntu bionic). tag `bionic-<version>`
-* core only (alpine 3.7). tag `alpine-<version>`
+* core only (alpine). tag `alpine-<version>`
 
 This image has installed:
  * dotnet SDK 2.1
  * NuGet CLI
- * Paket installed globally. `5.198.0`
+ * Paket installed globally.
  * Fake installed globally.
  * (only in mono-variant) Mono `5.14.0.177`
  * Node.js, npm, yarn for typescript support and building web UIs
@@ -23,7 +23,7 @@ This image has installed:
 The image is published on [Docker Hub](https://hub.docker.com/r/kudulab/dotnet-dojo).
 
 ## Usage
-1. Install [Dojo](https://github.com/ai-traders/dojo). (It's just a script on $PATH)
+1. Install [Dojo](https://github.com/kudulab/dojo). (It's just a script on $PATH)
 2. In your project you should have an `Dojofile`
 ```
 DOJO_DRIVER=docker
