@@ -46,7 +46,7 @@ jobs:
       - persist_to_workspace:
           root: ~/repo
           paths:
-            - image/imagerc
+            - image/imagerc-alpine
 
   build_debian:
     executor: platform
@@ -59,7 +59,7 @@ jobs:
       - persist_to_workspace:
           root: ~/repo
           paths:
-            - image/imagerc
+            - image/imagerc-debian
 
   itest_alpine:
     executor: platform
