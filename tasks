@@ -52,6 +52,11 @@ function get_tag_suffix {
 }
 
 function docker_login {
+  if [ -n "$DOCKERHUB_TOKEN" ]; then
+    echo "$DOCKERHUB_TOKEN" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+    return
+  fi
+  echo "Warning: docker environment variables not found: falling back to Vault for authentication." >&2
   vault_user_path=$USER
   if [ $vault_user_path == "go" ]; then
     vault_user_path="gocd"
@@ -66,24 +71,20 @@ case "${command}" in
   set_version)
       set +u
       releaser::bump_changelog_version "$2" "$3"
-      ./tasks dockerfiles
       ;;
-  verify)
+  verify_version)
       releaser::verify_release_ready
-      ./tasks dockerfiles
-      modified_files=$(git status --porcelain | awk '{print $2}' | wc -l)
-      if [ $modified_files != "0" ]; then
-        echo "There are modified files in the working directory, you might have forgotten to commit re-generated Dockerfiles. Please run './tasks set_version' and commit"
-        exit 5
-      fi
       ;;
   dockerfiles)
       production_image_version=$(releaser::get_last_version_from_changelog "${changelog_file}")
       python3 dockerfiles.py --iversion $production_image_version
       ;;
-  build_one_local)
-      ./tasks dockerfiles
+  build)
       image_flavor="$2"
+      if [[ "${image_flavor}" == "" ]]; then
+        echo "Please specify one of the docker image variants: alpine or debian"
+        exit 3
+      fi
       echo "Building image: ${image_flavor}"
       imagerc_filename=$(get_imagerc_filename ${image_flavor})
       production_image_suffix=$(get_tag_suffix ${image_flavor})
@@ -97,13 +98,18 @@ case "${command}" in
       docker_build_options="-f Dockerfile.${image_flavor}"
       docker_ops::docker_build "${image_dir}" "${imagerc_filename}" "${image_name}" "${image_tag}" "${image_registry}"
       ;;
-  build_one)
+  push)
+      image_flavor="$2"
+      if [[ "${image_flavor}" == "" ]]; then
+        echo "Please specify one of the docker image variants: alpine or debian"
+        exit 3
+      fi
+      echo "Pushing image: ${image_flavor}"
       docker_login
-      ./tasks build_one_local $2
-      imagerc_filename=$(get_imagerc_filename $2)
+      imagerc_filename=$(get_imagerc_filename ${image_flavor})
       docker_ops::push "${image_dir}" "${imagerc_filename}"
       ;;
-  itest_one)
+  itest)
       imagerc_filename=$(get_imagerc_filename $2)
       docker_ops::ensure_pulled_image "${image_dir}" "${imagerc_filename}"
       echo "Testing image: ${KUDU_DOCKER_IMAGE_URL} using ${imagerc_filename}"
@@ -119,7 +125,7 @@ case "${command}" in
       ./tasks verify
       releaser::git_tag_from_changelog
       ;;
-  publish_one)
+  publish)
       imagerc_filename=$(get_imagerc_filename $2)
       production_image_suffix=$(get_tag_suffix $2)
       docker_login
@@ -133,6 +139,20 @@ case "${command}" in
       secured_token_gocd=$(secret_ops::encrypt_with_gocd_top "${vault_token}")
       echo "Generated token: ${vault_token} and encrypted by GoCD server"
       secret_ops::insert_vault_token_gocd_yaml "${secured_token_gocd}"
+      ;;
+  example)
+      image_flavor="$2"
+      if [[ "${image_flavor}" == "" ]]; then
+        echo "Please specify one of the docker image variants: alpine or debian"
+        exit 3
+      fi
+      imagerc_filename=$(get_imagerc_filename ${image_flavor})
+      docker_ops::ensure_pulled_image "${image_dir}" "${imagerc_filename}"
+      echo "Testing image: ${KUDU_DOCKER_IMAGE_URL}"
+      echo "DOJO_DOCKER_IMAGE=\"${KUDU_DOCKER_IMAGE_URL}\"" > ./Dojofile.example
+      echo "DOJO_IDENTITY_OUTER=\"$(pwd)/test/integration/identities/full\"" >> ./Dojofile.example
+      echo "DOJO_WORK_OUTER=$(pwd)/test/integration/test_dojo_work" >> ./Dojofile.example
+      dojo -c ./Dojofile.example
       ;;
   *)
       echo "Invalid command: '${command}'"

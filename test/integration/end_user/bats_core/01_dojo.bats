@@ -14,7 +14,7 @@ load '/opt/bats-assert/load.bash'
 @test "can git clone using ssh dotnet-example from github" {
   # always git clone the master branch which is expected to have passing tests
   run /bin/bash -c "dojo -c Dojofile.to_be_tested \"rm -rf dotnet-example &&\
-    git clone git@github.com:ai-traders/dotnet-example.git\""
+    git clone git@github.com:ai-traders/dotnet-example.git && cd dotnet-example && git checkout net6.0\""
   assert_output --partial "Cloning into 'dotnet-example'..."
   assert_equal "$status" 0
 }
@@ -24,7 +24,7 @@ load '/opt/bats-assert/load.bash'
   run /bin/bash -c "dojo -c Dojofile.to_be_tested \"rm -rf dotnet-docker-samples &&\
     git clone https://github.com/dotnet/dotnet-docker/ dotnet-docker-samples &&\
     cd dotnet-docker-samples &&\
-    git checkout 08ba4044b109ac06134a8a1232605add8aa41d71\""
+    git checkout 1297d21bbf695bcb87580bea2ccefdced894eeeb\""
   assert_output --partial "Cloning into 'dotnet-docker-samples'..."
   assert_equal "$status" 0
 }

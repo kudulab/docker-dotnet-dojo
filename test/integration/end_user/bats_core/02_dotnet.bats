@@ -8,7 +8,8 @@ load '/opt/bats-assert/load.bash'
 }
 @test "dotnet is invocable" {
   run /bin/bash -c "dojo -c Dojofile.to_be_tested \"dotnet --info\""
-  assert_output --partial "Microsoft.NETCore.App 2.2.7"
+  assert_output --partial "Microsoft.NETCore.App 6.0.7"
+  assert_output --partial "6.0.302"
   assert_equal "$status" 0
 }
 @test "dotnet core projects can be built" {
@@ -25,11 +26,11 @@ load '/opt/bats-assert/load.bash'
 }
 @test "paket is invocable" {
   run /bin/bash -c "dojo -c Dojofile.to_be_tested \"paket --version\""
-  assert_output --partial "Paket version 5.226.0"
+  assert_output --partial "Paket version 7.1.5"
   assert_equal "$status" 0
 }
 @test "fake is invocable" {
   run /bin/bash -c "dojo -c Dojofile.to_be_tested \"fake --version\""
-  assert_output --partial "FAKE 5 - F# Make (5.18.2)"
+  assert_output --partial "FAKE 5 - F# Make (5.22.0)"
   assert_equal "$status" 0
 }

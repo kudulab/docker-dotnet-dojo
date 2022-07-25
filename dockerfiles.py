@@ -23,35 +23,22 @@ def main(argv):
    THIS_DIR = os.path.dirname(os.path.abspath(__file__))
    j2_env = Environment(loader=FileSystemLoader(THIS_DIR), trim_blocks=True)
 
-   sdk_version='2.2.402'
+   debian_sdk_version='6.0.302-bullseye-slim-amd64'
+   alpine_sdk_version='6.0.302-alpine3.16-amd64'
    template_file="image/Dockerfile.j2"
-   with open("image/Dockerfile.full", "w") as text_file:
+   with open("image/Dockerfile.debian", "w") as text_file:
        text_file.write(j2_env.get_template(template_file).render(
-           base_tag=sdk_version + '-stretch',
-           enable_mono=True,
-           os_family='debian',
-           os_dist='stretch'))
-
-   with open("image/Dockerfile.stretch", "w") as text_file:
-       text_file.write(j2_env.get_template(template_file).render(
-           base_tag=sdk_version + '-stretch',
+           base_tag=debian_sdk_version,
            enable_mono=False,
            os_family='debian',
-           os_dist='stretch'))
-
-   with open("image/Dockerfile.bionic", "w") as text_file:
-       text_file.write(j2_env.get_template(template_file).render(
-           base_tag=sdk_version + '-bionic',
-           enable_mono=False,
-           os_family='debian',
-           os_dist='bionic'))
+           os_dist='bullseye'))
 
    with open("image/Dockerfile.alpine", "w") as text_file:
        text_file.write(j2_env.get_template(template_file).render(
-           base_tag=sdk_version + '-alpine3.9',
+           base_tag=alpine_sdk_version,
            enable_mono=False,
            os_family='alpine',
-           os_dist='alpine3.9'))
+           os_dist='alpine3.16'))
 
 if __name__ == "__main__":
    main(sys.argv[1:])
