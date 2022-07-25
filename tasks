@@ -66,16 +66,9 @@ case "${command}" in
   set_version)
       set +u
       releaser::bump_changelog_version "$2" "$3"
-      ./tasks dockerfiles
       ;;
-  verify)
+  verify_version)
       releaser::verify_release_ready
-      ./tasks dockerfiles
-      modified_files=$(git status --porcelain | awk '{print $2}' | wc -l)
-      if [ $modified_files != "0" ]; then
-        echo "There are modified files in the working directory, you might have forgotten to commit re-generated Dockerfiles. Please run './tasks set_version' and commit"
-        exit 5
-      fi
       ;;
   dockerfiles)
       production_image_version=$(releaser::get_last_version_from_changelog "${changelog_file}")
