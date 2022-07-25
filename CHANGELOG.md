@@ -1,4 +1,4 @@
-### 3.1.5 (2020-Oct-27)
+### 3.2.0 (2022-Jul-25)
 
 * use new base dotnet images 6.0.302
 * use dojo 0.11.0 docker image scripts
@@ -8,6 +8,7 @@
 * Npm 8.10.0-r0
 * Yarn 1.22.19-r0
 * do not install Mono
+* add CircleCI pipeline, remove GoCD pipeline
 
 ### 3.1.4 (2019-Oct-29)
 
