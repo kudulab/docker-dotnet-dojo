@@ -84,6 +84,10 @@ case "${command}" in
   build_one_local)
       ./tasks dockerfiles
       image_flavor="$2"
+      if [[ "${image_flavor}" == "" ]]; then
+        print_error_no_variant_specified
+        exit 3
+      fi
       echo "Building image: ${image_flavor}"
       imagerc_filename=$(get_imagerc_filename ${image_flavor})
       production_image_suffix=$(get_tag_suffix ${image_flavor})

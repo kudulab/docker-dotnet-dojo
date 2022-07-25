@@ -1,14 +1,16 @@
-FROM mcr.microsoft.com/dotnet/core/sdk:2.2.402-bionic
+FROM mcr.microsoft.com/dotnet/sdk:6.0.302-bullseye-slim-amd64
 
-ENV NUGET_CLI_VERSION=v4.7.1 \
-  PAKET_VERSION=5.226.0 \
-  FAKE_VERSION=5.18.2 \
-  MONO_VERSION=5.14.0.177
+ENV PAKET_VERSION=7.1.5 \
+  FAKE_VERSION=5.22.0 \
+  NODE_VERSION=16.16.0 \
+  NPM_VERSION=8.10.0 \
+  YARN_VERSION=1.22.19
 
-ENV NODE_VERSION=v8.12.0 NPM_VERSION=6 YARN_VERSION=latest
 RUN apt-get update && \
   DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-  sudo git ca-certificates wget apt-utils locales git unzip nano ssh-client xz-utils
+  sudo git ca-certificates wget apt-utils locales git unzip nano ssh-client xz-utils gnupg2
+
+# intall Nodejs, Npm, Yarn
 RUN ARCH= && dpkgArch="$(dpkg --print-architecture)" \
   && case "${dpkgArch##*-}" in \
     amd64) ARCH='x64';; \
@@ -19,16 +21,16 @@ RUN ARCH= && dpkgArch="$(dpkg --print-architecture)" \
     i386) ARCH='x86';; \
     *) echo "unsupported architecture"; exit 1 ;; \
   esac \
-  && curl -SLO "https://nodejs.org/dist/${NODE_VERSION}/node-${NODE_VERSION}-linux-$ARCH.tar.xz" \
-  && tar -xJf "node-${NODE_VERSION}-linux-$ARCH.tar.xz" -C /usr/local --strip-components=1 --no-same-owner \
-  && rm "node-${NODE_VERSION}-linux-$ARCH.tar.xz" \
+  && curl -SLO "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-$ARCH.tar.xz" \
+  && tar -xJf "node-v${NODE_VERSION}-linux-$ARCH.tar.xz" -C /usr/local --strip-components=1 --no-same-owner \
+  && rm "node-v${NODE_VERSION}-linux-$ARCH.tar.xz" \
   && ln -s /usr/local/bin/node /usr/local/bin/nodejs
-RUN npm -g install yarn
+RUN npm install -g yarn@${YARN_VERSION}
 ################################################################################
 # For Dojo
 ################################################################################
-ENV DOJO_VERSION=0.6.3
-RUN git clone --depth 1 -b ${DOJO_VERSION} https://github.com/ai-traders/dojo.git /tmp/dojo_git &&\
+ENV DOJO_VERSION=0.11.0
+RUN git clone --depth 1 -b ${DOJO_VERSION} https://github.com/kudulab/dojo.git /tmp/dojo_git &&\
   /tmp/dojo_git/image_scripts/src/install.sh && \
   rm -r /tmp/dojo_git && \
   echo 'dojo ALL=(ALL) NOPASSWD: ALL' >> /etc/sudoers
@@ -54,10 +56,17 @@ RUN ln -s /home/dojo/.nuget/NuGet/NuGet.Config /home/dojo/.config/NuGet/NuGet.Co
 COPY core/* /usr/bin/
 
 # Install bats
-RUN git clone --depth 1 https://github.com/sstephenson/bats.git /opt/bats &&\
-   git clone --depth 1 https://github.com/ztombol/bats-support.git /opt/bats-support &&\
-   git clone --depth 1 https://github.com/ztombol/bats-assert.git /opt/bats-assert &&\
- /opt/bats/install.sh /usr/local
+ENV BATS_CORE_VERSION=1.2.1 BATS_SUPPORT_VERSION=004e707638eedd62e0481e8cdc9223ad471f12ee BATS_ASSERT_VERSION=9f88b4207da750093baabc4e3f41bf68f0dd3630
+
+RUN cd /tmp &&\
+  git clone --depth 1 -b v${BATS_CORE_VERSION} https://github.com/bats-core/bats-core.git &&\
+  cd bats-core && ./install.sh /opt &&\
+  cd .. && rm -r bats-core &&\
+  ln -s /opt/bin/bats /usr/bin/bats &&\
+  git clone https://github.com/ztombol/bats-support.git /opt/bats-support &&\
+  cd /opt/bats-support && git reset --hard ${BATS_SUPPORT_VERSION} &&\
+  git clone https://github.com/ztombol/bats-assert.git /opt/bats-assert &&\
+  cd /opt/bats-assert && git reset --hard ${BATS_ASSERT_VERSION}
 
 # Warm up image
 RUN su dojo -c 'mkdir -p /tmp/warmup && cd /tmp/warmup && dotnet new classlib && dotnet restore && dotnet build && rm -rf /tmp/warmup' &&\
