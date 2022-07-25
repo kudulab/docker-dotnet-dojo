@@ -41,6 +41,8 @@ jobs:
       - setup
       - run:
           command: /bin/bash -c "./tasks build alpine"
+      - run:
+          command: /bin/bash -c "./tasks push alpine"
       - persist_to_workspace:
           root: ~/repo
           paths:
@@ -52,6 +54,8 @@ jobs:
       - setup
       - run:
           command: /bin/bash -c "./tasks build debian"
+      - run:
+          command: /bin/bash -c "./tasks push debian"
       - persist_to_workspace:
           root: ~/repo
           paths:
