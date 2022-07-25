@@ -139,7 +139,10 @@ commands:
       - checkout
       - add_ssh_keys:
           fingerprints:
-            - "a9:26:53:09:1f:ba:44:24:4b:8e:ad:1c:bc:54:a2:95"
+            # generated with: ssh-keygen -t ed25519 -C "CircleCI to github.com"
+            # then, public key added to github.com
+            # and private key added to CircleCI
+            - "21:2d:df:c0:2a:a6:b8:ba:0b:40:fd:93:b7:03:0d:33"
 
 executors:
   platform:
