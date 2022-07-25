@@ -122,11 +122,16 @@ case "${command}" in
       fi
       ;;
   release)
-      ./tasks verify
+      ./tasks verify_version
       releaser::git_tag_from_changelog
       ;;
   publish)
-      imagerc_filename=$(get_imagerc_filename $2)
+      image_flavor="$2"
+      if [[ "${image_flavor}" == "" ]]; then
+        echo "Please specify one of the docker image variants: alpine or debian"
+        exit 3
+      fi
+      imagerc_filename=$(get_imagerc_filename ${image_flavor})
       production_image_suffix=$(get_tag_suffix $2)
       docker_login
       version=$(releaser::get_last_version_from_whole_changelog "${changelog_file}")

@@ -23,7 +23,10 @@ workflows:
           filters:
             branches:
               only: master
-      - publish:
+      - publish_alpine:
+          requires:
+            - release
+      - publish_debian:
           requires:
             - release
 
@@ -112,14 +115,23 @@ jobs:
       - run:
           command: /bin/bash -c "./tasks release"
 
-  publish:
+  publish_alpine:
     executor: platform
     steps:
       - setup
       - attach_workspace:
           at: ~/repo
       - run:
-          command: /bin/bash -c "./tasks publish"
+          command: /bin/bash -c "./tasks publish alpine"
+
+  publish_debian:
+    executor: platform
+    steps:
+      - setup
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          command: /bin/bash -c "./tasks publish debian"
 
 commands:
   setup:
