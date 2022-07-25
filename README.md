@@ -46,7 +46,7 @@ which is a mount from your current directory of the docker host.
 Instructions how to update this project.
 
 1. Create a new feature branch from the main branch
-1. Work on your changes in that feature branch. If you want, describe you changes in [CHANGELOG.md](CHANGELOG.md)
+1. Work on your changes in that feature branch. If you want, describe you changes in [CHANGELOG.md](CHANGELOG.md). If you want to edit Dockerfile, please edit the template `image/Dockerfile.j2` and then run `./tasks dockerfiles` which will generate the other Dockerfiles (`image/Dockerfile.alpine` and `image/Dockefile.debian`).
 1. Build your image locally to check that it succeeds: `./tasks build debian` and `./tasks build alpine`
 1. Test your image locally: `./tasks itest debian` and `./tasks itest alpine`. You may need to install the test framework - you can do it  by following the same commands as in the Dockerfile of this project.
 1. If you are happy with the results, create a PR from your feature branch to master branch

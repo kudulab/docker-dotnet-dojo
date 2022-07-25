@@ -75,7 +75,6 @@ case "${command}" in
       python3 dockerfiles.py --iversion $production_image_version
       ;;
   build)
-      ./tasks dockerfiles
       image_flavor="$2"
       if [[ "${image_flavor}" == "" ]]; then
         echo "Please specify one of the docker image variants: alpine or debian"
