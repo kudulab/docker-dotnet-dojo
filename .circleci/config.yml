@@ -1,0 +1,132 @@
+version: 2.1
+
+workflows:
+  # Environment variables required in CircleCI environment:
+  #  - DOCKERHUB_USERNAME
+  #  - DOCKERHUB_TOKEN
+  docker-dotnet-dojo:
+    jobs:
+      - build_alpine
+      - build_debian
+      - verify_version
+      - itest_alpine:
+          requires:
+            - build_alpine
+      - itest_debian:
+          requires:
+            - build_debian
+      - release:
+          requires:
+            - itest_alpine
+            - itest_debian
+            - verify_version
+          filters:
+            branches:
+              only: master
+      - publish:
+          requires:
+            - release
+
+jobs:
+  verify_version:
+    executor: platform
+    steps:
+      - setup
+      - run:
+          command: /bin/bash -c "./tasks verify_version"
+
+  build_alpine:
+    executor: platform
+    steps:
+      - setup
+      - run:
+          command: /bin/bash -c "./tasks build alpine"
+      - persist_to_workspace:
+          root: ~/repo
+          paths:
+            - image/imagerc
+
+  build_debian:
+    executor: platform
+    steps:
+      - setup
+      - run:
+          command: /bin/bash -c "./tasks build debian"
+      - persist_to_workspace:
+          root: ~/repo
+          paths:
+            - image/imagerc
+
+  itest_alpine:
+    executor: platform
+    steps:
+      - setup
+      - run:
+          name: Install dojo
+          command: |
+            version="0.11.0"
+            wget -O /tmp/dojo https://github.com/kudulab/dojo/releases/download/${version}/dojo_linux_amd64
+            chmod +x /tmp/dojo
+            sudo mv /tmp/dojo /usr/bin/dojo
+      - run:
+          command: sudo git clone https://github.com/bats-core/bats-core /opt/bats-core
+      - run:
+          command: sudo git clone https://github.com/bats-core/bats-assert /opt/bats-assert
+      - run:
+          command: sudo git clone https://github.com/bats-core/bats-support /opt/bats-support
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          command: /bin/bash -c "./tasks itest alpine"
+
+  itest_debian:
+    executor: platform
+    steps:
+      - setup
+      - run:
+          name: Install dojo
+          command: |
+            version="0.11.0"
+            wget -O /tmp/dojo https://github.com/kudulab/dojo/releases/download/${version}/dojo_linux_amd64
+            chmod +x /tmp/dojo
+            sudo mv /tmp/dojo /usr/bin/dojo
+      - run:
+          command: sudo git clone https://github.com/bats-core/bats-core /opt/bats-core
+      - run:
+          command: sudo git clone https://github.com/bats-core/bats-assert /opt/bats-assert
+      - run:
+          command: sudo git clone https://github.com/bats-core/bats-support /opt/bats-support
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          command: /bin/bash -c "./tasks itest debian"
+
+  release:
+    executor: platform
+    steps:
+      - setup
+      - run:
+          command: /bin/bash -c "./tasks release"
+
+  publish:
+    executor: platform
+    steps:
+      - setup
+      - attach_workspace:
+          at: ~/repo
+      - run:
+          command: /bin/bash -c "./tasks publish"
+
+commands:
+  setup:
+    steps:
+      - checkout
+      - add_ssh_keys:
+          fingerprints:
+            - "a9:26:53:09:1f:ba:44:24:4b:8e:ad:1c:bc:54:a2:95"
+
+executors:
+  platform:
+    machine:
+      image: ubuntu-2004:202101-01
+    working_directory: ~/repo
