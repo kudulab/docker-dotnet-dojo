@@ -1,3 +1,7 @@
+### 3.2.1 (2023-Mar-02)
+
+* allow `$HOME/.ssh` to not exist on a Docker host
+
 ### 3.2.0 (2022-Jul-25)
 
 * use new base dotnet images 6.0.302

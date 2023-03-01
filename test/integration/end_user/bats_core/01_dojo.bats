@@ -11,6 +11,16 @@ load '/opt/bats-assert/load.bash'
   assert_equal "$status" 0
 }
 
+@test "/usr/bin/entrypoint.sh returns 0 using identity: empty" {
+  run /bin/bash -c "dojo -identity-dir-outer test/integration/identities/empty -c Dojofile.to_be_tested \"pwd && whoami\""
+  # this is printed on test failure
+  echo "output: $output"
+  assert_output --partial "dojo init finished"
+  assert_output --partial "dotnet-dojo"
+  refute_output --partial "root"
+  assert_equal "$status" 0
+}
+
 @test "can git clone using ssh dotnet-example from github" {
   # always git clone the master branch which is expected to have passing tests
   run /bin/bash -c "dojo -c Dojofile.to_be_tested \"rm -rf dotnet-example &&\
