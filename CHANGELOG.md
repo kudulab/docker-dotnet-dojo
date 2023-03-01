@@ -1,6 +1,7 @@
 ### 3.2.1 (2023-Mar-02)
 
 * allow `$HOME/.ssh` to not exist on a Docker host
+* use Nodejs 16.19.1, because it seems to be the only version available for alpine:3.16 https://pkgs.alpinelinux.org/packages?name=nodejs&branch=v3.16&repo=&arch=x86_64&maintainer=
 
 ### 3.2.0 (2022-Jul-25)
 

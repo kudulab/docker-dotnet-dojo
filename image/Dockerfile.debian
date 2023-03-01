@@ -2,7 +2,7 @@ FROM mcr.microsoft.com/dotnet/sdk:6.0.302-bullseye-slim-amd64
 
 ENV PAKET_VERSION=7.1.5 \
   FAKE_VERSION=5.22.0 \
-  NODE_VERSION=16.16.0 \
+  NODE_VERSION=16.19.1 \
   NPM_VERSION=8.10.0 \
   YARN_VERSION=1.22.19
 
